@@ -12,7 +12,7 @@ import pgeocode
 import re
 import sys
 #sys.path.insert(0, '../fgmap') #Temporary need to make it proper module import at some point
-from fgmap import Fgmap 
+from fgmap.fgmap import Fgmap 
 # Setting Page configuration
 
 st.set_page_config(

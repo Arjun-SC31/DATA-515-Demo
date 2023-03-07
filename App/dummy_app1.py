@@ -11,7 +11,7 @@ import streamlit as st
 import pgeocode
 import re
 import sys
-#sys.path.insert(0, '../fgmap') #Temporary need to make it proper module import at some point
+sys.path.append("r", '../fgmap') #Temporary need to make it proper module import at some point
 import fgmap 
 # Setting Page configuration
 

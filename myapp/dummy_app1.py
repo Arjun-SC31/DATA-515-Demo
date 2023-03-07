@@ -21,7 +21,7 @@ st.set_page_config(
 )
 
 # Reading the data
-df = pd.read_csv("sampledata515.csv")
+df = pd.read_csv("../sampledata515.csv")
 df['Zip'] = df['Zip'].apply(str) # pgeocodes accepts string inputs for zip codes
     
 def zip_to_coordinates(zip_code):

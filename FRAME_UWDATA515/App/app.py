@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # Reading the data
-df = pd.read_csv("../Food_and_Restaurant_Data.csv")
+df = pd.read_csv("https://github.com/Arjun-SC31/DATA-515-Demo/blob/main/FRAME_UWDATA515/App/Food_and_Restaurant_Data.csv")
 df['zip_code'] = df['zip_code'].apply(str) # pgeocodes accepts string inputs for zip codes
 
 seattle_zips = ['98103', '98122', '98105', '98133', '98107', '98117', '98115',

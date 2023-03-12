@@ -11,7 +11,7 @@ import streamlit as st
 import pgeocode
 import sys
 #sys.path.insert(0, '../../../fgmap') #Temporary need to make it proper module import at some point
-from DATA-515-Demo/FRAME_UWDATA515/fgmap import fgmap # pylint: disable=import-error, wrong-import-position
+from FRAME_UWDATA515/fgmap import fgmap # pylint: disable=import-error, wrong-import-position
 
 # Setting Page configuration
 st.set_page_config(

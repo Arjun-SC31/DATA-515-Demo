@@ -10,7 +10,7 @@ import pandas as pd
 import streamlit as st
 import pgeocode
 import sys #Temporary need to make it proper module import at some point
-import fgmap # pylint: disable=import-error, wrong-import-position
+import fgmap.Fgmap # pylint: disable=import-error, wrong-import-position
 
 # Setting Page configuration
 st.set_page_config(

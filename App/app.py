@@ -3,13 +3,12 @@ This file is the script that renders the web app written with streamlit for FRAM
 The app is written tailored to the dummy data we have in possession before
 developing the app for the entire city of Seattle.
 """
-
+ 
 # Importing Libraries
 import numpy as np
 import pandas as pd
 import streamlit as st
-import pgeocode
-import sys #Temporary need to make it proper module import at some point
+import pgeocode #Temporary need to make it proper module import at some point
 from fgmap import fgmap # pylint: disable=import-error, wrong-import-position
 
 # Setting Page configuration
@@ -19,7 +18,7 @@ st.set_page_config(
 )
 
 # Reading the data
-df = pd.read_csv("https://raw.githubusercontent.com/Arjun-SC31/DATA-515-Demo/main/App/Food_and_Restaurant_Data.csv")
+df = pd.read_csv("Food_and_Restaurant_Data.csv", encoding = "latin-1")
 df['zip_code'] = df['zip_code'].apply(str) # pgeocodes accepts string inputs for zip codes
 
 seattle_zips = ['98103', '98122', '98105', '98133', '98107', '98117', '98115',
@@ -202,9 +201,11 @@ def main():
     The web app is rendered through this function.
     User inputs taken through this function.
     '''
-    st.title("FRAME - Food Recommendations for All Methodical Eaters 🍴")
-    with st.form("FRAME_form"):
-        st.subheader("Enter your details below:")
+    st.markdown("<h1 style='text-align: center; color: white;'>FRAME - Food Recommendations for All Methodical Eaters 🍴</h1>", unsafe_allow_html=True)
+    #st.title("FRAME - Food Recommendations for All Methodical Eaters 🍴")
+    placeholder = st.empty()
+    with placeholder.form("FRAME_form"):
+        st.subheader("Enter your preferences:")
         # Input for user zipcode and max distance
         left_zip, right_dist = st.columns(2)
         zip_input = left_zip.text_input('Zip code:', '98105')
@@ -237,7 +238,6 @@ def main():
                                                                              ])
         submit = st.form_submit_button("Get FRAMEd!")
     if submit:
-
         final_filter = recommend_food(zip_input, max_dist_input,
                                       restaurant_category_input, food_category_input,
                                       price_input, rating_input, health_inspect_input)
@@ -248,6 +248,7 @@ def main():
             st.stop()
         else:
             pass
+        placeholder.empty()
         st.balloons()
         st.header('Below are your food recommendations:')
         #st.write(final_filter.shape)
@@ -274,6 +275,19 @@ def main():
                 )
             display_map(restaurants, int(zip_input))
         st.success('Thank you! We hope you enjoyed using FRAME!')
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            pass
+        with col2:
+            pass
+        with col3:
+            try_again = st.button("Get FRAMEd (Again)")
+            if try_again:
+                main()
+        with col4:
+            pass
+        with col5:
+            pass
 def display_map(restaurants, zip_input):
     '''
     Displays the restaurants suggested as well as the user's input location
@@ -292,7 +306,7 @@ def display_map(restaurants, zip_input):
         index += 1
     newmap.showzipcode(zip_input)
     htmlstring = newmap.returnhtml()
-    st.components.v1.html(htmlstring, width=700, height=900, scrolling=True)
+    st.components.v1.html(htmlstring, width=700, height=970, scrolling=True)
     #How to get address distances
     #distances = []
     #for address in restaurants:

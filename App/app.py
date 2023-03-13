@@ -8,7 +8,7 @@ developing the app for the entire city of Seattle.
 import pandas as pd
 import streamlit as st
 import pgeocode #Temporary need to make it proper module import at some point
-import fgmap # pylint: disable=import-error, wrong-import-position
+from fgmap import fgmap # pylint: disable=import-error, wrong-import-position
 
 # Setting Page configuration
 st.set_page_config(

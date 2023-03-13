@@ -130,7 +130,7 @@ def restaurant_category_shortlist(filter_score, restaurant_category_input):
     filter_score['result'] = filter_score['RestaurantCategory'].str.contains('|'.join(list_rest_category))
     filter_rest_category = filter_score[filter_score['result'] == True]
     filter_rest_category.drop('result', axis = 1, inplace = True)
-    st.write(filter_rest_category.shape)
+    #st.write(filter_rest_category.shape)
     return filter_rest_category
 def food_category_shortlist(filter_rest_category, food_category):
     '''

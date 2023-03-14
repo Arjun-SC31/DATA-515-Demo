@@ -118,7 +118,7 @@ def restaurant_category_shortlist(filter_score, restaurant_category_input):
             '|'.join(list_rest_category
                      )
             )
-    filter_rest_category = filter_score[filter_score['result'] is True]
+    filter_rest_category = filter_score[filter_score['result'] == True]
     filter_rest_category.drop('result', axis = 1, inplace = True)
     #st.write(filter_rest_category.shape)
     return filter_rest_category
@@ -168,7 +168,7 @@ def health_inspect_shortlist(filter_food, health_inspect_input):
         st.error('Invalid Health Inspection result input, try again!', icon="🚨")
         st.stop()
     filter_food['result'] = filter_food['Grade'].str.contains('|'.join(acceptable))
-    health_inspection_df = filter_food[filter_food['result'] is True]
+    health_inspection_df = filter_food[filter_food['result'] == True]
     health_inspection_df.drop('result', axis = 1, inplace = True)
     return health_inspection_df
 

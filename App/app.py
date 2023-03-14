@@ -260,7 +260,8 @@ def main():
         else:
             pass
         placeholder.empty()
-        st.balloons()
+        #st.balloons()
+        st.snow()
         st.header('Below are your food recommendations:')
         #st.write(final_filter.shape)
         restaurants = []

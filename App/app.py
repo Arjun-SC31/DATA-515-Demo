@@ -1,23 +1,3 @@
-"""
-This file is the script that renders the web app written with streamlit for FRAME.
-The app is written tailored to the dummy data we have in possession before
-developing the app for the entire city of Seattle.
-"""
- 
-# Importing Libraries
-import pandas as pd # pylint: disable=import-error
-import streamlit as st # pylint: disable=import-error
-import pgeocode # pylint: disable=import-error
-from fgmap import fgmap # pylint: disable=import-error, wrong-import-position
-# Setting Page configuration
-st.set_page_config(
-    page_title="FRAME - Food Recommendation for All Methodical Eaters",
-    page_icon="🍴", layout = 'wide', initial_sidebar_state="expanded"
-)
-# Reading the data
-df = pd.read_csv("https://raw.githubusercontent.com/Arjun-SC31/DATA-515-Demo/main/App/Datafordashboard.csv")
-df['zip_code'] = df['zip_code'].apply(str) # pgeocodes accepts string inputs for zip codes
-df_categories = pd.read_csv("https://raw.githubusercontent.com/Arjun-SC31/DATA-515-Demo/main/App/Category_Mapping.csv")
 seattle_zips = ['98101', '98102', '98103', '98104', '98105', '98106', '98107',
 '98108', '98109', '98112', '98115', '98116', '98117', '98118', '98119', '98121',
 '98122', '98125', '98126', '98133', '98134', '98136', '98144', '98146', '98148',
@@ -27,6 +7,7 @@ def zip_code_shortlist(zipcode, max_distance):
     Description: Returns a dictionary containing the zipcodes within the distance limit, and
     their distance from the customer.
     ----------
+    Execution String: zip_code_shortlist('98105', 2.5)
     Inputs:
     zipcode: Input zipcode from the user
     max_distance: maximum distance limit from user
@@ -35,8 +16,24 @@ def zip_code_shortlist(zipcode, max_distance):
     Keys: Zipcodes
     Values: Distance of a given zipcode from the user's zipcode.
     '''
-    dist_calc = pgeocode.GeoDistance('us')
-    # Dictionary containing the shortlisted zipcodes, and their distance from the customer
+    # Check for valid zipcode format
+    if not isinstance(zipcode,str) or len(zipcode) != 5:
+        raise ValueError("Invalid zipcode format. Please enter a 5-digit numeric zipcode.")
+
+    # Check for valid maximum distance
+    try:
+        max_distance = float(max_distance)
+        if max_distance <= 0:
+            raise ValueError("Maximum distance must be a positive number.")
+    except ValueError as exc:
+        raise ValueError("Invalid maximum distance. Please enter a valid distance.") from exc
+
+    # Connect to geocoding service
+    try:
+        dist_calc = pgeocode.GeoDistance('us')
+    except ConnectionError as exc:
+        raise ConnectionError("Could not connect to geocoding service. Try again.") from exc
+
     shortlist_zip = {}
     for i in seattle_zips:
         distance = dist_calc.query_postal_code(zipcode, str(i))
@@ -54,12 +51,16 @@ def restaurants_shortlist(acceptable_zips):
     Description: Shortlists restaurants based on whether the
     restaurant zipcode is present in the list of shortlisted zipcodes.
     ----------
+    Execution String: restaurants_shortlist(shortlist_zip)
     Input:
-    acceptable zips: the dictionary containing the acceptable zip codes and
+    acceptable_zips: the dictionary containing the acceptable zip codes and
     distance to user
     Output:
     List of restaurants with acceptable zip codes.
     '''
+    # Check for valid input type
+    if not isinstance(acceptable_zips, dict):
+        raise TypeError("acceptable_zips must be a dictionary.")
     filter_restaurants = df[df['zip_code'].isin(acceptable_zips.keys())]
     #st.write('restaurant_shortlist: ', filter_restaurants.shape)
     return filter_restaurants
@@ -68,13 +69,20 @@ def price_shortlist(filter_restaurants, price):
     Description: Returns a filtered dataframe with all dishes
     that cost below a certain price.
     ----------
+    Execution String: price_shortlist(filter_restaurants, price)
     Input:
     filter_restaurants: The dataframe with the filtered restaurants previously
     filtered based on distance
     price: The maximum price that the user is willing to pay
     Output:
-    filtered dataframe of dishes which cost less than or equal to price.
+    filtered dataframe of d34ishes which cost less than or equal to price.
     '''
+    # Check for valid input types
+    if not isinstance(filter_restaurants, pd.DataFrame):
+        raise TypeError("filter_restaurants must be a pandas DataFrame.")
+    if not isinstance(price, str):
+        raise TypeError("price must be a string.")
+
     prices = ['$', '$$', '$$$', '$$$$']
     #filter_price = filter_restaurants[filter_restaurants['price_range'] == price] # pylint: disable=singleton-comparison
     filter_price = filter_restaurants
@@ -89,6 +97,7 @@ def score_shortlist(filter_price, minimum_rating):
     with a score greater than or equal to the minimum score input by the user
     from '0' to '5'
     ----------
+    Execution String: score_shortlist(filter_price, minimum_rating)
     Input:
     filter_price: obtained dishes after filtering for price
     minimum_rating: lowest acceptable score for a restaurant
@@ -96,6 +105,11 @@ def score_shortlist(filter_price, minimum_rating):
     filtered dataframe of dishes where the restaurant score is higher
     than the specified minimum.
     '''
+    # Check for valid input type and value
+    if not isinstance(minimum_rating, (float, int)):
+        raise TypeError("minimum_rating must be a float or an integer.")
+    if minimum_rating < 0 or minimum_rating > 5:
+        raise ValueError("minimum_rating must be between 0 and 5 (inclusive).")
     filter_score = filter_price[filter_price['RestaurantScore'] >= minimum_rating]
     #st.write('score_shortlist: ', filter_score.shape)
     return filter_score
@@ -104,6 +118,7 @@ def restaurant_category_shortlist(filter_score, restaurant_category_input):
     Description: Filtering the score-filtered data to only include restaurants
     which match the restaurant category input given by the user.
     ----------
+    Execution String: restaurant_category_shortlist(filter_score,"Indian")
     Input:
     filter_score: obtained dishes after filtering restaurant score
     restaurant_category_input: Desired restaurant category from the user
@@ -111,7 +126,8 @@ def restaurant_category_shortlist(filter_score, restaurant_category_input):
     filtered dataframe of dishes where the restaurant category matches the
     user input.
     '''
-    
+    if not isinstance(filter_score, pd.DataFrame):
+        raise TypeError("filter_score(the first argument) must be a pandas DataFrame.")
     rest_category = df_categories[
         df_categories['Updated Category'].str.contains(
             restaurant_category_input
@@ -119,8 +135,10 @@ def restaurant_category_shortlist(filter_score, restaurant_category_input):
         ]
     list_rest_category = rest_category.RestaurantCategory.values.tolist()
     #st.write(list_rest_category)
-    filter_score['result'] = filter_score['RestaurantCategory'].str.contains('|'.join(list_rest_category))
-    filter_rest_category = filter_score[filter_score['result'] == True]
+    filter_score['result'] = filter_score['RestaurantCategory'].str.contains(
+        '|'.join(list_rest_category)
+        )
+    filter_rest_category = filter_score[filter_score['result'] == True] # pylint: disable=singleton-comparison
     filter_rest_category.drop('result', axis = 1, inplace = True)
     #st.write(filter_rest_category.shape)
     return filter_rest_category
@@ -129,6 +147,7 @@ def food_category_shortlist(filter_rest_category, food_category):
     Description: Filtering the data obtained after filtering restaurant
     categories. The data is further filtered to accommodate food item categories
     ----------
+    Execution String: food_category_shortlist(filter_rest_category,"Other")
     Input:
     filter_rest_category: obtained dishes after filtering restaurant category
     food_category: Desired food item category
@@ -136,10 +155,10 @@ def food_category_shortlist(filter_rest_category, food_category):
     filtered dataframe of dishes where the food item category matches the
     user's desired food item category.
     '''
+    if not isinstance(filter_rest_category, pd.DataFrame):
+        raise TypeError("filter_rest_category(the first argument) must be a pandas DataFrame.")
     if food_category == 'None':
         return filter_rest_category
-    else:
-        pass
     filter_food = filter_rest_category[
         filter_rest_category['Category'].str.contains(
             food_category
@@ -152,6 +171,7 @@ def health_inspect_shortlist(filter_food, health_inspect_input):
     '''
     Description: Filtering the data based on user's health inspection preferences.
     ----------
+    Execution String: food_category_shortlist(filter_food, "Good")
     Input:
     filter_food: Dishes obtained after filtering the food item categories
     health_inspect_input: Health inspection results option taken from user.
@@ -159,6 +179,8 @@ def health_inspect_shortlist(filter_food, health_inspect_input):
     filtered dataframe of dishes where the food item category matches the
     user's health inspection requirement.
     '''
+    if not isinstance(filter_food, pd.DataFrame):
+        raise TypeError("filter_food(the first argument) must be a pandas DataFrame.")
     acceptable = []
     if health_inspect_input == "Excellent":
         acceptable = ['Excellent']
@@ -173,9 +195,8 @@ def health_inspect_shortlist(filter_food, health_inspect_input):
     else:
         st.error('Invalid Health Inspection result input, try again!', icon="🚨")
         st.stop()
-        
     filter_food['result'] = filter_food['Grade'].str.contains('|'.join(acceptable))
-    health_inspection_df = filter_food[filter_food['result'] == True]
+    health_inspection_df = filter_food[filter_food['result'] == True] # pylint: disable=singleton-comparison
     health_inspection_df.drop('result', axis = 1, inplace = True)
     return health_inspection_df
 
@@ -183,6 +204,7 @@ def seating_shortlist(health_inspection_filter, seating_input):
     '''
     Description: Filtering the data based on user's seating preferences.
     ----------
+    Execution String: seating_shortlist(health_inspection_df, "13 - 50")
     Input:
     health_inspection_filter: Dishes obtained after filtering for health inspection
     results.
@@ -191,6 +213,9 @@ def seating_shortlist(health_inspection_filter, seating_input):
     filtered dataframe of dishes where the restaurant has the specified range
     of seats.
     '''
+    if not isinstance(health_inspection_filter, pd.DataFrame):
+        raise TypeError("health_inspection_filter(the first argument) must be a pandas DataFrame.")
+
     if seating_input == 'Takeout':
         seating_input = 'No Seating'
     else:
@@ -211,25 +236,46 @@ def seating_shortlist(health_inspection_filter, seating_input):
     else:
         st.error('Invalid Health Inspection result input, try again!', icon="🚨")
         st.stop()
-        
     seat_filter = health_inspection_filter
     seat_filter['result'] = seat_filter['Seats'].str.contains('|'.join(acceptable_seating))
-    seat_filter = seat_filter[seat_filter['result'] == True]
+    seat_filter = seat_filter[seat_filter['result'] == True] # pylint: disable=singleton-comparison
     seat_filter.drop('result', axis = 1, inplace = True)
     return seat_filter
-def recommend_food(zip_input, max_dist_input, restaurant_category_input,
+def recommend_food(zip_input, max_dist_input, restaurant_category_input, # pylint: disable=too-many-locals
                    food_category_input, price_input,rating_input, health_inspection_input,
                    seating_input):
     # pylint: disable=too-many-arguments
     '''
     Takes the user responses as input to then filter restaurant and dishes data
     such that the dishes most closely matching user requirements are selected.
-    1. filter based on distance parameter - done
-    2. filter based on price range - done
-    3. filter based on restaurant score - done
-    4. Fuzzy Matching based on cuisine
-    5. fuzzy matching based on dietary preferences
+    Execution String: recommend_food('98105', 2.5, "Indian","Other", 25.0,2,"Good","13 - 50")
+    Input:
+    zip_input:
+    max_dist_input:
+    restaurant_category_input:
+    diet_input:
+    price_input:
+    rating_input:
+    health_inspection_input:
+    seating_input:
+    Output:
+    filtered dataframe of top 5 dishes and the restaurants
     '''
+    if not isinstance(zip_input,str) or len(zip_input) != 5:
+        raise ValueError("Invalid zipcode format. Please enter a 5-digit numeric zipcode.")
+    try:
+        max_dist_input = float(max_dist_input)
+        if max_dist_input <= 0:
+            raise ValueError("Maximum distance must be a positive number.")
+    except ValueError as exc:
+        raise ValueError("Invalid maximum distance. Please enter a valid distance.") from exc
+
+    if not isinstance(price_input, str):
+        raise TypeError("price must be a string.")
+    if not isinstance(rating_input, (float, int)):
+        raise TypeError("rating_input must be a float or an integer.")
+    if rating_input < 0 or rating_input > 5:
+        raise ValueError("rating_input must be between 0 and 5 (inclusive).")
     # Getting the zipcodes within acceptable distance
     zip_dict = zip_code_shortlist(str(zip_input), max_dist_input)
     if zip_input not in seattle_zips:
@@ -252,17 +298,18 @@ def recommend_food(zip_input, max_dist_input, restaurant_category_input,
                                                         health_inspection_input)
     seating_filter = seating_shortlist(health_inspection_filter, seating_input)
     df_final = seating_filter.drop_duplicates(subset=['RestaurantName'])
-    if df_final.shape[0] >=5:
+    if df_final.shape[0] >=5: # pylint: disable=no-else-return
         return df_final.head()
     else:
         return seating_filter.head()
-def main():
+def main(): # pylint: disable=too-many-statements, too-many-branches
     # pylint: disable=too-many-locals
     '''
     The web app is rendered through this function.
     User inputs taken through this function.
     '''
-    st.markdown("<h1 style='text-align: center; color: white;'>FRAME - Food Recommendations for All Methodical Eaters 🍴</h1>", unsafe_allow_html=True)
+    st.markdown(
+        "<h1 style='text-align: center; color: white;'>FRAME - Food Recommendations for All Methodical Eaters 🍴</h1>", unsafe_allow_html=True) # pylint: disable=line-too-long
     #st.title("FRAME - Food Recommendations for All Methodical Eaters 🍴")
     placeholder = st.empty()
     with placeholder.form("FRAME_form"):
@@ -274,7 +321,10 @@ def main():
             st.error('Invalid zipcode, please try again!', icon="🚨")
             st.stop()
         # Input for maximum distance from user
-        max_dist_input = right_dist.number_input('Maximum distance preference (miles): ', min_value = 0.5, max_value = 15.0, step = 0.5)
+        max_dist_input = right_dist.number_input('Maximum distance preference (miles): ',
+                                                 min_value = 0.5,
+                                                 max_value = 15.0,
+                                                 step = 0.5)
         if isinstance(max_dist_input, float) is False and isinstance(max_dist_input, int) is False:
             st.error('Invalid max distance input, numbers only!', icon="🚨")
             st.stop()
@@ -297,7 +347,7 @@ def main():
         # Input for dietary preferences
         food_item_category = ['Other', 'Appetizers', 'Entrees', 'Beverages',
                               'Sides', 'Salads', 'Platters', 'Desserts', 'Snacks', 'None']
-        food_category_input = right_food.selectbox('Food Category:',
+        food_category_input = right_food.selectbox('Food Category',
                                                    options = food_item_category)
         if food_category_input not in food_item_category:
             st.error('Invalid food category, try again!', icon="🚨")
@@ -306,14 +356,17 @@ def main():
             pass
         # Input for price range and rating preference
         left_price, right_rating = st.columns(2)
-        price_input = left_price.selectbox('Maximum Price ($): ', options = ['$', '$$', '$$$', '$$$$'])
+        price_input = left_price.selectbox('Maximum Price ($): ',
+                                           options = ['$', '$$', '$$$', '$$$$'])
         if isinstance(price_input, str) is False:
-           st.error('Invalid price input, try again!', icon="🚨")
-           st.stop()
+            st.error('Invalid price input, try again!', icon="🚨")
+            st.stop()
         else:
-           pass
+            pass
         # Input for restaurant rating preferences
-        rating_input = right_rating.selectbox('Enter restaurant rating preferences (on a scale of 5): ', options=['★ & Up', '★★ & Up', '★★★ & Up', '★★★★ & Up', 'None'])
+        rating_input = right_rating.selectbox(
+            'Enter restaurant rating preferences (on a scale of 5): ',
+            options=['★ & Up', '★★ & Up', '★★★ & Up', '★★★★ & Up', 'None'])
         if rating_input == '★ & Up':
             rating_input = 1
         elif rating_input == '★★ & Up':
@@ -337,15 +390,13 @@ def main():
                                             options = health_inspection)
         if health_inspect_input not in health_inspection:
             st.error('Invalid inspection criteria, try again!', icon="🚨")
-            st.stop
-        else:
-            pass
+            st.stop # pylint: disable=pointless-statement
         seating = ['Takeout', '0 - 12','13 - 50', '51 - 150', '151-250', '> 250']
         seating_input = right_seating.selectbox("How extroverted are you feeling today?",
                                      options = seating)
         if seating_input not in seating:
             st.error('Invalid seating criteria, try again!', icon="🚨")
-            st.stop
+            st.stop # pylint: disable=pointless-statement
         submit = st.form_submit_button("Get FRAMEd!")
     if submit:
         final_filter = recommend_food(zip_input, max_dist_input,
@@ -364,7 +415,6 @@ def main():
         st.header('Below are your food recommendations:')
         #st.write(final_filter.shape)
         restaurants = []
-        
         g_map, food_recommendations = st.columns([5,4], gap="large")
         with g_map:
             for i in range (1,len(final_filter.index)+1):
@@ -401,7 +451,6 @@ def main():
             pass
         with col5:
             pass
-        
 def display_map(restaurants, zip_input):
     '''
     Displays the restaurants suggested as well as the user's input location
@@ -429,4 +478,3 @@ def display_map(restaurants, zip_input):
         #Return string: "50 miles" #str.split()
 if __name__ == '__main__':
     main()
-  

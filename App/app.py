@@ -1,3 +1,23 @@
+"""
+This file is the script that renders the web app written with streamlit for FRAME.
+The app is written tailored to the dummy data we have in possession before
+developing the app for the entire city of Seattle.
+"""
+ 
+# Importing Libraries
+import pandas as pd # pylint: disable=import-error
+import streamlit as st # pylint: disable=import-error
+import pgeocode # pylint: disable=import-error
+from fgmap import fgmap # pylint: disable=import-error, wrong-import-position
+# Setting Page configuration
+st.set_page_config(
+    page_title="FRAME - Food Recommendation for All Methodical Eaters",
+    page_icon="🍴", layout = 'wide', initial_sidebar_state="expanded"
+)
+# Reading the data
+df = pd.read_csv("https://raw.githubusercontent.com/Arjun-SC31/DATA-515-Demo/main/App/Datafordashboard.csv")
+df['zip_code'] = df['zip_code'].apply(str) # pgeocodes accepts string inputs for zip codes
+df_categories = pd.read_csv("https://raw.githubusercontent.com/Arjun-SC31/DATA-515-Demo/main/App/Category_Mapping.csv")
 seattle_zips = ['98101', '98102', '98103', '98104', '98105', '98106', '98107',
 '98108', '98109', '98112', '98115', '98116', '98117', '98118', '98119', '98121',
 '98122', '98125', '98126', '98133', '98134', '98136', '98144', '98146', '98148',

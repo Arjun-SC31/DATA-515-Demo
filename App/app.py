@@ -5,9 +5,9 @@ developing the app for the entire city of Seattle.
 """
  
 # Importing Libraries
-import pandas as pd
-import streamlit as st
-import pgeocode #Temporary need to make it proper module import at some point
+import pandas as pd # pylint: disable=import-error
+import streamlit as st # pylint: disable=import-error
+import pgeocode # pylint: disable=import-error
 from fgmap import fgmap # pylint: disable=import-error, wrong-import-position
 # Setting Page configuration
 st.set_page_config(
@@ -118,7 +118,7 @@ def restaurant_category_shortlist(filter_score, restaurant_category_input):
             '|'.join(list_rest_category
                      )
             )
-    filter_rest_category = filter_score[filter_score['result'] == True]
+    filter_rest_category = filter_score[filter_score['result'] == True]# pylint: disable=singleton-comparison
     filter_rest_category.drop('result', axis = 1, inplace = True)
     #st.write(filter_rest_category.shape)
     return filter_rest_category
@@ -168,7 +168,7 @@ def health_inspect_shortlist(filter_food, health_inspect_input):
         st.error('Invalid Health Inspection result input, try again!', icon="🚨")
         st.stop()
     filter_food['result'] = filter_food['Grade'].str.contains('|'.join(acceptable))
-    health_inspection_df = filter_food[filter_food['result'] == True]
+    health_inspection_df = filter_food[filter_food['result'] == True]# pylint: disable=singleton-comparison
     health_inspection_df.drop('result', axis = 1, inplace = True)
     return health_inspection_df
 
@@ -315,7 +315,8 @@ def main(): # pylint: disable=too-many-branches, too-many-statements
         else:
             pass
         seating = ['No Seating', '0 - 12','13 - 50', '51 - 150', '151-250', '> 250']
-        seating_input = right_seating.selectbox("How social are you feeling? (Choose restaurant seating)",
+        seating_input = right_seating.selectbox(
+            "How social are you feeling? (Choose restaurant seating)",
                                      options = seating)
         if seating_input not in seating:
             st.error('Invalid seating criteria, try again!', icon="🚨")
@@ -379,7 +380,7 @@ def display_map(restaurants, zip_input):
     Displays the restaurants suggested as well as the user's input location
     on a map embedded into the web page.
     '''
-    newmap = fgmap.Fgmap() # pylint: disable=not-callable
+    newmap = fgmap.Fgmap() # pylint: disable=not-callable, no-member
     newmap.createmap(origin=str(zip_input))
     #Draw trip line and add point at each restaurant
     index = 0

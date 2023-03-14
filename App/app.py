@@ -199,15 +199,15 @@ def seating_shortlist(health_inspection_filter, seating_input):
     if seating_input == "No Seating":
         acceptable_seating = ['No Seating']
     elif seating_input == "0 - 12":
-        acceptable_seating = ['Takeout', '0 - 12']
+        acceptable_seating = ['No Seating', '0 - 12']
     elif seating_input =="13 - 50":
-        acceptable_seating = ['Takeout', '0 - 12','13 - 50']
+        acceptable_seating = ['No Seating', '0 - 12','13 - 50']
     elif seating_input =="51 - 150":
-        acceptable_seating = ['Takeout', '0 - 12','13 - 50', '51 - 150']
+        acceptable_seating = ['No Seating', '0 - 12','13 - 50', '51 - 150']
     elif seating_input == "151-250":
-        acceptable_seating = ['Takeout', '0 - 12','13 - 50', '51 - 150', '151-250']
+        acceptable_seating = ['No Seating', '0 - 12','13 - 50', '51 - 150', '151-250']
     elif seating_input == "> 250":
-        acceptable_seating = ['Takeout', '0 - 12','13 - 50', '51 - 150', '151-250', '> 250']
+        acceptable_seating = ['No Seating', '0 - 12','13 - 50', '51 - 150', '151-250', '> 250']
     else:
         st.error('Invalid Health Inspection result input, try again!', icon="🚨")
         st.stop()
